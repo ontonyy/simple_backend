@@ -112,7 +112,9 @@ jobs:
         env:
           JIRA_URL: ${{ steps.vars.outputs.jira_url }}
           PR_BODY: ${{ steps.pr_details.outputs.data.body }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           UPDATED_BODY="${JIRA_URL}\n\n${PR_BODY}"
+          echo "Updating PR body with: $UPDATED_BODY"
+          gh auth login --with-token <<< "$PERSONAL_TOKEN"
           gh pr edit ${{ github.event.pull_request.number }} --body "$UPDATED_BODY"
