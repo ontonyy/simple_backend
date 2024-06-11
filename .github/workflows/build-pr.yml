@@ -79,3 +79,30 @@ jobs:
           html_body: file://README.md
           convert_markdown: true
           content_type: text/html
+
+  update-pr-body:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        id: vars
+        run: |
+          BRANCH_NAME=${GITHUB_REF##*/}
+          JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
+          echo "jira_url=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
+
+      - name: Get current PR body
+        id: get_pr_body
+        uses: actions-ecosystem/action-get-merged-pr@v1
+
+      - name: Update PR body
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          JIRA_URL: ${{ env.jira_url }}
+          PR_BODY: ${{ steps.get_pr_body.outputs.body }}
+        run: |
+          UPDATED_BODY="${JIRA_URL}\n\n${PR_BODY}"
+          gh pr edit ${{ github.event.pull_request.number }} --body "$UPDATED_BODY"
