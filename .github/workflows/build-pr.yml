@@ -79,3 +79,45 @@ jobs:
           html_body: file://README.md
           convert_markdown: true
           content_type: text/html
+
+  update-pr-body:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        id: vars
+        run: |
+          BRANCH_NAME=${{ github.event.pull_request.head.ref }}
+          JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
+          if [ -z "$JIRA_TICKET" ]; then
+            echo "Error: Unable to extract JIRA_TICKET from branch name $BRANCH_NAME"
+            exit 1
+          fi
+          echo "JIRA_URL=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
+
+      - name: Get PR details
+        id: pr_details
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update PR body
+        env:
+          JIRA_URL: ${{ env.JIRA_URL }}
+          PR_BODY: ${{ steps.pr_details.outputs.data.body }}
+          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          UPDATED_BODY=$(cat <<EOF
+                            ### Issue link
+                            
+                            ${JIRA_URL}
+                            
+                            ${PR_BODY}
+                        EOF)
+          gh auth login --with-token <<< "$PERSONAL_TOKEN"
+          gh pr edit ${{ github.event.pull_request.number }} --body "$UPDATED_BODY"
