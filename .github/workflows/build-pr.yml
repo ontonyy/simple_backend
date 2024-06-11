@@ -90,8 +90,15 @@ jobs:
       - name: Set up environment variables
         id: vars
         run: |
+          echo "GITHUB_REF: $GITHUB_REF"
           BRANCH_NAME=${GITHUB_REF##*/}
+          echo "BRANCH_NAME: $BRANCH_NAME"
           JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
+          if [ -z "$JIRA_TICKET" ]; then
+            echo "Error: Unable to extract JIRA_TICKET from branch name $BRANCH_NAME"
+            exit 1
+          fi
+          echo "JIRA_TICKET: $JIRA_TICKET"
           echo "jira_url=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
 
       - name: Get PR details
