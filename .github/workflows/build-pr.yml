@@ -94,15 +94,19 @@ jobs:
           JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
           echo "jira_url=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
 
-      - name: Get current PR body
-        id: get_pr_body
-        uses: actions-ecosystem/action-get-merged-pr@v1
+      - name: Get PR details
+        id: pr_details
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update PR body
         env:
+          JIRA_URL: ${{ steps.vars.outputs.jira_url }}
+          PR_BODY: ${{ steps.pr_details.outputs.data.body }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JIRA_URL: ${{ env.jira_url }}
-          PR_BODY: ${{ steps.get_pr_body.outputs.body }}
         run: |
           UPDATED_BODY="${JIRA_URL}\n\n${PR_BODY}"
           gh pr edit ${{ github.event.pull_request.number }} --body "$UPDATED_BODY"
