@@ -1,7 +1,3 @@
-### Issue link
-
-https://develop.atlassian.net/browse/
-
 ### Summary
 
 1. [ ] Does your submission pass tests?
