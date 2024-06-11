@@ -91,14 +91,12 @@ jobs:
         id: vars
         run: |
           BRANCH_NAME=${{ github.event.pull_request.head.ref }}
-          echo "BRANCH_NAME: $BRANCH_NAME"
           JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
           if [ -z "$JIRA_TICKET" ]; then
             echo "Error: Unable to extract JIRA_TICKET from branch name $BRANCH_NAME"
             exit 1
           fi
-          echo "JIRA_TICKET: $JIRA_TICKET"
-          echo "jira_url=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
+          echo "JIRA_URL=https://develop.atlassian.net/browse/$JIRA_TICKET" >> $GITHUB_ENV
 
       - name: Get PR details
         id: pr_details
@@ -110,7 +108,7 @@ jobs:
 
       - name: Update PR body
         env:
-          JIRA_URL: ${{ steps.vars.outputs.jira_url }}
+          JIRA_URL: ${{ env.JIRA_URL }}
           PR_BODY: ${{ steps.pr_details.outputs.data.body }}
           PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
