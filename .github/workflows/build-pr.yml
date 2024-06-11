@@ -90,8 +90,7 @@ jobs:
       - name: Set up environment variables
         id: vars
         run: |
-          echo "GITHUB_REF: $GITHUB_REF"
-          BRANCH_NAME=${GITHUB_REF##*/}
+          BRANCH_NAME=${{ github.event.pull_request.head.ref }}
           echo "BRANCH_NAME: $BRANCH_NAME"
           JIRA_TICKET=$(echo $BRANCH_NAME | grep -o '^[^-]*-[^-]*')
           if [ -z "$JIRA_TICKET" ]; then
